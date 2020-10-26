@@ -2,6 +2,8 @@
 
 #include "Connection.hpp"
 
+#include "Renderer.hpp"
+
 #include <glm/glm.hpp>
 
 #include <vector>
@@ -30,4 +32,5 @@ struct PlayMode : Mode {
 	//connection to server:
 	Client &client;
 
+	Renderer renderer;
 };

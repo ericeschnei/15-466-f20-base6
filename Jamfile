@@ -102,6 +102,7 @@ if $(OS) = NT { #Windows
 #Store the names of various .cpp files to build into variables:
 CLIENT_NAMES =
 	client
+	Renderer
 	PlayMode
 	LitColorTextureProgram
 	#ColorTextureProgram #not used right now, but you might want it
@@ -146,7 +147,7 @@ SHOW_SCENE_NAMES =
 
 
 LOCATE_TARGET = objs ; #put objects in 'objs' directory
-Objects 
+Objects
 	$(CLIENT_NAMES:S=.cpp)
 	$(SERVER_NAMES:S=.cpp)
 	$(COMMON_NAMES:S=.cpp)

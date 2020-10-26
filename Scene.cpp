@@ -3,6 +3,7 @@
 #include "gl_errors.hpp"
 #include "read_write_chunk.hpp"
 
+#include <cstdio>
 #include <glm/gtc/type_ptr.hpp>
 
 #include <fstream>
