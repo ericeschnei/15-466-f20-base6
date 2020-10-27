@@ -19,9 +19,10 @@ namespace TextRenderer {
 		const std::string & font_path
 	);
 
-	void get_string(
-		const std::string   & string,
-		std::vector<Vertex> & vertices
+	size_t get_string(
+		const char          *string,
+		std::vector<Vertex> &vertices,
+		float                max_len
 	);
 
 	void render(
@@ -29,9 +30,10 @@ namespace TextRenderer {
 		const std::vector<Vertex> &vertices,
 
 		// properties
-		const glm::uvec2 &position,
+		const glm::vec2  &position,
 		float scale,
-		const glm::u8vec4 &color
+		const glm::u8vec4 &color,
+		bool  center
 	);
 
 } // namespace TextRenderer

@@ -2,6 +2,7 @@
 
 #include "DrawLines.hpp"
 #include "GL.hpp"
+#include "SDL_events.h"
 #include "SDL_keycode.h"
 #include "SDL_scancode.h"
 #include "gl_errors.hpp"
@@ -11,6 +12,7 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include <random>
+#include <string>
 #include <unordered_set>
 
 GLuint keyboard_meshes_for_color_texture_program = 0;
