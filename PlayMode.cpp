@@ -345,8 +345,8 @@ void PlayMode::update(float elapsed) {
 	if (num_new_chars_typed || new_score_to_add) {
 		//send a 3-byte message of type 'b':
 		client.connections.back().send('b');
-		client.connections.back().send(num_new_chars_typed);
-		client.connections.back().send(new_score_to_add);
+		client.connections.back().send(uint8_t(num_new_chars_typed));
+		client.connections.back().send(uint8_t(new_score_to_add));
 	}
 
 	num_new_chars_typed = 0;

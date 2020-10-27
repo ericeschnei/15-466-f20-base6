@@ -146,7 +146,7 @@ int main(int argc, char **argv) {
 		uint32_t p1_new_chars, p1_score, p2_new_chars, p2_score;
 		for (auto &[c, player] : players) {
 			(void)c; //work around "unused variable" warning on whatever version of g++ github actions is running
-			if (!player.name.compare("Player1")) {
+			if (!player.name.compare("Player3")) { //player 3 here bc player1 was crashing
 				p1_new_chars = player.num_new_characters;
 				p1_score = player.current_score;
 			}
