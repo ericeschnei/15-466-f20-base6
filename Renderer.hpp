@@ -21,6 +21,9 @@ struct Renderer {
 	Scene::Transform *rhand1 = nullptr;
 	Scene::Transform *rhand2 = nullptr;
 
+	// text
+	static constexpr size_t FONT_SIZE = 32 << 6;
+
 	// screen textures/fbos
 	const glm::uvec2 tex_size = glm::uvec2(960, 540);
 	std::array<GLuint, 2> fbos;

@@ -95,6 +95,11 @@ Renderer::Renderer() : scene(*scene_) {
 
 	}
 
+	{ // initialize renderer
+		TextRenderer::load_font(FONT_SIZE, data_path("mononoki.ttf"));
+		TextRenderer::get_string("Test string! o_O", manager_verts, -1.0f);
+	}
+
 }
 Renderer::~Renderer() {}
 
@@ -119,6 +124,8 @@ void Renderer::draw(const glm::uvec2 &drawable_size) {
 	glViewport(0, 0, tex_size.x, tex_size.y);
 	glClearColor(0.0f, 1.0f, 1.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
+
+
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 	glBindFramebuffer(GL_FRAMEBUFFER, fbos[1]);
@@ -156,6 +163,12 @@ void Renderer::draw(const glm::uvec2 &drawable_size) {
 	glDepthFunc(GL_LESS); //this is the default depth comparison function, but FYI you can change it.
 
 	scene.draw(*camera);
+
+	glDisable(GL_DEPTH_TEST);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	TextRenderer::render(size, manager_verts, glm::uvec2(100, 100), FONT_SIZE, glm::u8vec4(255, 255, 0, 255));
 
 	glViewport(0, 0, drawable_size.x, drawable_size.y);
 	GL_ERRORS();
