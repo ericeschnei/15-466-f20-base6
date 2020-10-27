@@ -2,7 +2,9 @@
 
 #include "Scene.hpp"
 #include "TextRenderer.hpp"
-#include "glm/fwd.hpp"
+#include <glm/glm.hpp>
+#include <array>
+
 struct Renderer {
 
 	Renderer();

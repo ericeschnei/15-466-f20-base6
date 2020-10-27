@@ -98,6 +98,12 @@ Renderer::Renderer() : scene(*scene_) {
 }
 Renderer::~Renderer() {}
 
+
+void Renderer::update(float time_elapsed) {}
+void Renderer::update_manager_text(std::string new_text) {}
+void Renderer::update_p1(size_t new_chars, int score) {}
+void Renderer::update_p2(size_t new_chars, int score) {}
+
 void Renderer::set_time_remaining(float time_remaining) {
 
 	float rot = time_remaining * 2.0f * glm::pi<float>();
