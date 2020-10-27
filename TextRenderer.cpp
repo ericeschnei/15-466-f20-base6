@@ -1,6 +1,7 @@
 #include "TextRenderer.hpp"
 #include "TextRenderProgram.hpp"
 #include "GL.hpp"
+#include "freetype/fttypes.h"
 #include "gl_errors.hpp"
 #include "glm/ext/matrix_clip_space.hpp"
 #include "glm/gtc/type_ptr.hpp"
@@ -42,6 +43,7 @@ void TextRenderer::load_font(size_t size, const std::string &font_path) {
 		if (FT_New_Face(ft_library, font_path.c_str(), 0, &ft_face)) {
 			throw std::runtime_error("FT Face failed to initialize.");
 		}
+
 		if (FT_Set_Char_Size(ft_face, (FT_F26Dot6)size, (FT_F26Dot6)0, 0, 0)) {
 			throw std::runtime_error("FT: Setting char size failed.");
 		}
