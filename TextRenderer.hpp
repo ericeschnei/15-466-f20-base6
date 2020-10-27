@@ -1,26 +1,38 @@
 #pragma once
 
 #include "GL.hpp"
-#include "glm/fwd.hpp"
+#include <glm/glm.hpp>
 #include <hb.h>
 #include <hb-ft.h>
 #include <string>
+#include <vector>
 
 namespace TextRenderer {
 
-	GLuint atlas    = -1U;
-	GLuint vao      = -1U;
-	GLuint vbo      = -1U;
+	struct Vertex {
+		glm::vec2 pos;
+		glm::vec2 uv;
+	};
 
-	hb_font_t *font = nullptr;
-	size_t font_size = -1U;
-
-
-	FT_Library ft_library;
-	FT_Face ft_face;
-	
 	void load_font(
-		const glm::uvec2  & drawable_size,
+		size_t size,
 		const std::string & font_path
 	);
-}
+
+	void get_string(
+		const std::string   & string,
+		std::vector<Vertex> & vertices
+	);
+
+	void render(
+		const glm::uvec2 &drawable_size,
+		const std::vector<Vertex> &vertices,
+
+		// properties
+		const glm::uvec2 &position,
+		float scale,
+		const glm::u8vec4 &color
+	);
+
+} // namespace TextRenderer
+
