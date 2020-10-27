@@ -32,7 +32,8 @@ namespace TextRenderer {
 		// properties
 		const glm::vec2  &position,
 		float scale,
-		const glm::u8vec4 &color
+		const glm::u8vec4 &color,
+		bool  center
 	);
 
 } // namespace TextRenderer

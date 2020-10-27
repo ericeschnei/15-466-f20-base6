@@ -97,7 +97,7 @@ Renderer::Renderer() : scene(*scene_) {
 
 	{ // initialize renderer
 		TextRenderer::load_font(FONT_SIZE, data_path("mononoki.ttf"));
-		TextRenderer::get_string("Test string! o_O", manager_verts, -1.0f);
+		TextRenderer::get_string("Corporate wants letters from the LEFT HALF OF THE KEYBOARD.", manager_verts, -1.0f);
 	}
 
 }
@@ -168,7 +168,8 @@ void Renderer::draw(const glm::uvec2 &drawable_size) {
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	TextRenderer::render(size, manager_verts, glm::vec2(0.5, 0), 3, glm::u8vec4(255, 255, 0, 255));
+	TextRenderer::render(size, manager_verts, glm::vec2(0.5f, 0.845f), 3, glm::u8vec4(0, 0, 0, 255), true);
+	TextRenderer::render(size, manager_verts, glm::vec2(0.5f, 0.85f), 3, glm::u8vec4(255, 255, 255, 255), true);
 
 	glViewport(0, 0, drawable_size.x, drawable_size.y);
 	GL_ERRORS();

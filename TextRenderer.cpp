@@ -274,7 +274,8 @@ void TextRenderer::render(
 		const std::vector<Vertex> &vertices,
 		const glm::vec2           &position,
 		float                      scale,
-		const glm::u8vec4         &color) {
+		const glm::u8vec4         &color,
+		bool                       center) {
 
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	glBufferData(
@@ -289,25 +290,39 @@ void TextRenderer::render(
 
 	float s = scale / font_size * drawable_size.y;
 
-	glm::mat4 proj =
-		glm::ortho(
+	glm::mat4 proj = glm::ortho(
 			0.0f,
 			(float)drawable_size.x,
 			0.0f,
 			(float)drawable_size.y
-		) *
-		glm::mat4(
+		);
+	glm::mat4 scale_mat = glm::mat4(
 			glm::vec4(   s, 0.0f, 0.0f, 0.0f),
 			glm::vec4(0.0f,    s, 0.0f, 0.0f),
 			glm::vec4(0.0f, 0.0f,    s, 0.0f),
-			glm::vec4(position.x * drawable_size.x, position.y * drawable_size.y, 0.0f, 1.0f)
+			glm::vec4(0.0f, 0.0f, 0.0f, 1.0f)
+		);
+
+	glm::vec3 len = glm::vec3(proj * scale_mat * glm::vec4(vertices.back().pos, 0.0f, 1.0f));
+	glm::vec2 len_2d = glm::vec2(len.x + 1.0f, len.y + 1.0f) / 4.0f;
+	if (!center) {
+		len_2d = glm::vec2(0.0f, 0.0f);
+	}
+	glm::vec2 trans_amt = (position - len_2d) * glm::vec2(drawable_size);
+
+	glm::mat4 trans =
+		glm::mat4(
+			glm::vec4(1.0f, 0.0f, 0.0f, 0.0f),
+			glm::vec4(0.0f, 1.0f, 0.0f, 0.0f),
+			glm::vec4(0.0f, 0.0f, 1.0f, 0.0f),
+			glm::vec4(trans_amt, 0.0f, 1.0f)
 		);
 
 	glUniformMatrix4fv(
 			text_render_program->OBJECT_TO_CLIP_mat4,
 			1,
 			GL_FALSE,
-			glm::value_ptr(proj)
+			glm::value_ptr(proj * trans * scale_mat)
 	);
 	glUniform4f(
 			text_render_program->COLOR_vec4,
