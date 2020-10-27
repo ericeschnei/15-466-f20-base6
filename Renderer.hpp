@@ -48,6 +48,14 @@ struct Renderer {
 	std::vector<TextRenderer::Vertex> score_p1;
 	std::vector<TextRenderer::Vertex> score_p2;
 
+	// hand stuff
+	float p1_hand_pos = 0.0f;
+	float p2_hand_pos = 0.0f;
+	float p1_hand_vel = 0.0f;
+	float p2_hand_vel = 0.0f;
+	static constexpr float DAMP_AMT = 12.5f;
+	static constexpr float INCR_AMT = 0.2f;
+	static constexpr float HAND_HEIGHT = 0.1f;
 
 	// functions/variables to change to update render behavior
 	// 0 = all time remaining, 1 = no time remaining

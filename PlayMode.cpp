@@ -45,6 +45,7 @@ void PlayMode::update(float elapsed) {
 		renderer.update_p1(num_presses, 0);
 		num_presses = 0;
 	}
+	renderer.update(elapsed);
 	//queue data for sending to server:
 	//TODO: send something that makes sense for your game
 	if (left.downs || right.downs || down.downs || up.downs) {

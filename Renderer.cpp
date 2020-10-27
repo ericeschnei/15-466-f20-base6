@@ -100,8 +100,8 @@ Renderer::Renderer() : scene(*scene_) {
 	{ // initialize renderer
 		TextRenderer::load_font(FONT_SIZE, data_path("mononoki.ttf"));
 		TextRenderer::get_string("Waiting...", manager_verts, -1.0f);
-		TextRenderer::get_string("Score: 0", score_p1, -1.0f);
-		TextRenderer::get_string("Score: 0", score_p2, -1.0f);
+		TextRenderer::get_string("Your score: 0", score_p1, -1.0f);
+		TextRenderer::get_string("Their score: 0", score_p2, -1.0f);
 	}
 
 	{ // open files
@@ -117,7 +117,23 @@ Renderer::Renderer() : scene(*scene_) {
 Renderer::~Renderer() {}
 
 
-void Renderer::update(float time_elapsed) {}
+void Renderer::update(float time_elapsed) {
+
+	float damp = std::exp(-time_elapsed * DAMP_AMT);
+	p1_hand_vel *= damp;
+	p2_hand_vel *= damp;
+
+	p1_hand_pos += p1_hand_vel;
+	p2_hand_pos += p2_hand_vel;
+
+	lhand1->position = glm::vec3(0.0f, 0.0f, HAND_HEIGHT * (glm::sin(p1_hand_pos) + 1.0f) / 2.0f);
+	rhand1->position = glm::vec3(0.0f, 0.0f, HAND_HEIGHT * (-glm::sin(p1_hand_pos) + 1.0f) / 2.0f);
+
+	lhand2->position = glm::vec3(0.0f, 0.0f, HAND_HEIGHT * (glm::sin(p2_hand_pos) + 1.0f) / 2.0f);
+	rhand2->position = glm::vec3(0.0f, 0.0f, HAND_HEIGHT * (-glm::sin(p2_hand_pos) + 1.0f) / 2.0f);
+
+
+}
 
 void Renderer::update_manager_text(std::string new_text) {
 	manager_verts.clear();
@@ -125,6 +141,7 @@ void Renderer::update_manager_text(std::string new_text) {
 }
 
 void Renderer::update_p1(size_t new_chars, int score) {
+	p1_hand_vel += new_chars * INCR_AMT;
 
 	for (size_t i = 0; i < new_chars; i++) {
 		if (current_p1.size() >= MAX_LETTERS_PER_LINE) {
@@ -151,9 +168,10 @@ void Renderer::update_p1(size_t new_chars, int score) {
 	}
 
 	score_p1.clear();
-	TextRenderer::get_string(("Score: " + std::to_string(score)).c_str(), score_p1, -1.0f);
+	TextRenderer::get_string(("Your score: " + std::to_string(score)).c_str(), score_p1, -1.0f);
 }
 void Renderer::update_p2(size_t new_chars, int score) {
+	p2_hand_vel += new_chars * INCR_AMT;
 
 	for (size_t i = 0; i < new_chars; i++) {
 		if (current_p2.size() >= MAX_LETTERS_PER_LINE) {
@@ -180,7 +198,7 @@ void Renderer::update_p2(size_t new_chars, int score) {
 	}
 
 	score_p2.clear();
-	TextRenderer::get_string(("Score: " + std::to_string(score)).c_str(), score_p2, -1.0f);
+	TextRenderer::get_string(("Their score: " + std::to_string(score)).c_str(), score_p2, -1.0f);
 }
 
 void Renderer::set_time_remaining(float time_remaining) {
@@ -280,7 +298,7 @@ void Renderer::draw(const glm::uvec2 &drawable_size) {
 
 	// Draw score text
 	TextRenderer::render(size, score_p1, glm::vec2(0.25f, 0.1f), 4, glm::u8vec4(255, 255, 255, 255), true);
-	TextRenderer::render(size, score_p1, glm::vec2(0.75f, 0.1f), 4, glm::u8vec4(255, 255, 255, 255), true);
+	TextRenderer::render(size, score_p2, glm::vec2(0.75f, 0.1f), 4, glm::u8vec4(255, 255, 255, 255), true);
 
 	glViewport(0, 0, drawable_size.x, drawable_size.y);
 	GL_ERRORS();
