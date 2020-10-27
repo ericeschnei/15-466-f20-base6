@@ -102,6 +102,8 @@ if $(OS) = NT { #Windows
 #Store the names of various .cpp files to build into variables:
 CLIENT_NAMES =
 	client
+	TextRenderProgram
+	TextRenderer
 	Renderer
 	PlayMode
 	LitColorTextureProgram

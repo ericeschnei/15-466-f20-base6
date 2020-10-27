@@ -2,6 +2,7 @@
 #include "GL.hpp"
 #include "Load.hpp"
 #include "Mesh.hpp"
+#include "TextRenderer.hpp"
 #include "data_path.hpp"
 #include "gl_errors.hpp"
 #include "glm/common.hpp"
@@ -25,7 +26,6 @@ Load< MeshBuffer > meshes(LoadTagDefault, []() -> MeshBuffer const * {
 });
 
 Load< Scene > scene_(LoadTagDefault, []() -> Scene const * {
-	std::cout << "HI2" << std::endl;
 	return new Scene(data_path("game6.scene"), [&](Scene &scene, Scene::Transform *transform, std::string const &mesh_name){
 		Mesh const &mesh = meshes->lookup(mesh_name);
 
@@ -115,6 +115,12 @@ void Renderer::draw(const glm::uvec2 &drawable_size) {
 	glClear(GL_COLOR_BUFFER_BIT);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
+	glBindFramebuffer(GL_FRAMEBUFFER, fbos[1]);
+	glViewport(0, 0, tex_size.x, tex_size.y);
+	glClearColor(1.0f, 0.0f, 1.0f, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
 	// clamp viewport to 16x9 respolution
 	glViewport(0, 0, drawable_size.x, drawable_size.y);
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -130,7 +136,6 @@ void Renderer::draw(const glm::uvec2 &drawable_size) {
 	//update camera aspect ratio for drawable:
 	camera->aspect = float(size.x) / float(size.y);
 
-	// TODO: consider using the Light(s) in the scene to do this
 	glUseProgram(PROGRAM->program);
 	glUniform1i(PROGRAM->LIGHT_TYPE_int, 1);
 	GL_ERRORS();
