@@ -9,14 +9,14 @@
 #include <cassert>
 #include <unordered_map>
 
-// Some quick helper functions
-// Use them wisely as they could break if not careful
-float char_to_float(std::vector<char> buffer, int index) {
-	return ((float(buffer[index]) << 24) |
-		(float(buffer[index + 1]) << 16) |
-		(float(buffer[index + 2]) << 8) |
-		(float(buffer[index + 3])));
-}
+//Some quick helper functions
+//Use them wisely as they could break if not careful
+//float char_to_float(std::vector<char> buffer, int index) {
+//	return float((uint32_t(buffer[index]) << 24) |
+//		(uint32_t(buffer[index + 1]) << 16) |
+//		(uint32_t(buffer[index + 2]) << 8) |
+//		(uint32_t(buffer[index + 3])));
+//}
 
 uint32_t char_to_uint32(std::vector<char> buffer, int index) {
 	return ((uint32_t(buffer[index]) << 24) |
@@ -49,7 +49,8 @@ int main(int argc, char **argv) {
 	constexpr float ServerTick = 1.0f / 10.0f; //TODO: set a server tick that makes sense for your game
 
 	//server state:
-	
+	int32_t total_time = 60000; //60 seconds in milliseconds
+	int32_t time_remaining = 60000;
 
 	//per-client state:
 	struct PlayerInfo {
@@ -106,8 +107,8 @@ int main(int argc, char **argv) {
 
 					//handle messages from client:
 					//TODO: update for the sorts of messages your clients send
-					while (c->recv_buffer.size() >= 5) {
-						//expecting five-byte messages 'b' (left count) (right count) (down count) (up count)
+					while (c->recv_buffer.size() >= 3) {
+						//expecting three-byte messages 'b', char_count, and score
 						char type = c->recv_buffer[0];
 						if (type != 'b') {
 							std::cout << " message of non-'b' type received from client!" << std::endl;
@@ -116,17 +117,20 @@ int main(int argc, char **argv) {
 							return;
 						}
 						
-						int index = 1;
+					/*	int index = 1;
 						player.num_new_characters = char_to_uint32(c->recv_buffer, index);
 						player.total_characters_pressed += player.num_new_characters;
 						index += 4;
 						player.current_score += char_to_uint32(c->recv_buffer, index);
-						index += 4;
-						
+						index += 4;*/
+						player.num_new_characters = c->recv_buffer[1];
+						player.current_score = c->recv_buffer[2];
+						std::cout << "from client: " << player.name << " " <<
+							player.num_new_characters << " " << player.current_score << "\n";
 						//TODO remove
-						assert(index == 9);
+						//assert(index == 9);
 
-						c->recv_buffer.erase(c->recv_buffer.begin(), c->recv_buffer.begin() + index);
+						c->recv_buffer.erase(c->recv_buffer.begin(), c->recv_buffer.begin() + 3);
 					}
 				}
 			}, remain);
@@ -136,40 +140,53 @@ int main(int argc, char **argv) {
 		//TODO: replace with *your* game state update
 		
 
-		std::string status_message = "";
-		int32_t overall_sum = 0;
+		
+		uint32_t command = 0; //TODO rand value here
+		time_remaining -= (int32_t)(ServerTick * 10);
+		uint32_t p1_new_chars, p1_score, p2_new_chars, p2_score;
 		for (auto &[c, player] : players) {
 			(void)c; //work around "unused variable" warning on whatever version of g++ github actions is running
-			for (; player.left_presses > 0; --player.left_presses) {
-				player.total -= 1;
+			if (!player.name.compare("Player1")) {
+				p1_new_chars = player.num_new_characters;
+				p1_score = player.current_score;
 			}
-			for (; player.right_presses > 0; --player.right_presses) {
-				player.total += 1;
+			else if (!player.name.compare("Player2")) {
+				p2_new_chars = player.num_new_characters;
+				p2_score = player.current_score;
 			}
-			for (; player.down_presses > 0; --player.down_presses) {
-				player.total -= 10;
-			}
-			for (; player.up_presses > 0; --player.up_presses) {
-				player.total += 10;
-			}
-			if (status_message != "") status_message += " + ";
-			status_message += std::to_string(player.total) + " (" + player.name + ")";
-
-			overall_sum += player.total;
 		}
-		status_message += " = " + std::to_string(overall_sum);
 		//std::cout << status_message << std::endl; //DEBUG
 
 		//send updated game state to all clients
 		//TODO: update for your game state
 		for (auto &[c, player] : players) {
 			(void)player; //work around "unused variable" warning on whatever g++ github actions uses
-			//send an update starting with 'm', a 24-bit size, and a blob of text:
+			//send an update starting with 'm':
 			c->send('m');
-			c->send(uint8_t(status_message.size() >> 16));
-			c->send(uint8_t((status_message.size() >> 8) % 256));
-			c->send(uint8_t(status_message.size() % 256));
-			c->send_buffer.insert(c->send_buffer.end(), status_message.begin(), status_message.end());
+			std::string msg = std::to_string(command) + "," + std::to_string(time_remaining) + "," + std::to_string(total_time)
+				+ "," + std::to_string(p1_new_chars) + "," + std::to_string(p1_score) + "," + std::to_string(p2_new_chars) + "," + std::to_string(p2_score);
+
+			c->send(uint8_t(msg.size() >> 16));
+			c->send(uint8_t((msg.size() >> 8) % 256));
+			c->send(uint8_t(msg.size() % 256));
+			c->send_buffer.insert(c->send_buffer.end(), msg.begin(), msg.end());
+
+			/*c->send(uint8_t(command));
+			c->send(uint8_t(time_remaining >> 24));
+			c->send(uint8_t((time_remaining >> 16) % 256));
+			c->send(uint8_t((time_remaining >> 8) % 256));
+			c->send(uint8_t(time_remaining % 256));
+
+			c->send(uint8_t(total_time >> 24));
+			c->send(uint8_t((total_time >> 16) % 256));
+			c->send(uint8_t((total_time >> 8) % 256));
+			c->send(uint8_t(total_time % 256));
+			
+			c->send(p1_new_chars);
+			c->send(p1_score);
+			c->send(p2_new_chars);
+			c->send(p2_score);*/
+			//c->send_buffer.insert(c->send_buffer.end(), status_message.begin(), status_message.end());
 		}
 
 	}

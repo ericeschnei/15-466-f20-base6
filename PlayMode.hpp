@@ -11,20 +11,19 @@
 #include <unordered_map>
 
 struct PlayMode : Mode {
-	PlayMode(Client &client);
+	PlayMode(Client& client);
 	virtual ~PlayMode();
 
 	//functions called by main loop:
-	virtual bool handle_event(SDL_Event const &, glm::uvec2 const &window_size) override;
+	virtual bool handle_event(SDL_Event const&, glm::uvec2 const& window_size) override;
 	virtual void update(float elapsed) override;
-	virtual void draw(glm::uvec2 const &drawable_size) override;
+	virtual void draw(glm::uvec2 const& drawable_size) override;
 
-	size_t num_presses = 0;
 	//----- game state -----
 
 	// Player updates
-	uint32_t num_new_chars_typed = 0;
-	uint32_t new_score_to_add = 0;
+	uint8_t num_new_chars_typed = 0;
+	uint8_t new_score_to_add = 0;
 
 	//input tracking:
 	struct Button {
@@ -68,13 +67,13 @@ struct PlayMode : Mode {
 	std::string server_message;
 
 	//connection to server:
-	Client &client;
+	Client& client;
 
 	Renderer renderer;
 
 	int current_command = 0;
 
-	enum commands{
+	std::string commands[3] {
 		"Corporate wants you to MASH YOUR KEYBOARD",
 		"Corporate wants letters from the LEFT SIDE OF THE KEYBOARD",
 		"Corporate wants letters from the RIGHT SIDE OF THE KEYBOARD"
@@ -82,3 +81,4 @@ struct PlayMode : Mode {
 
 
 };
+

@@ -2,7 +2,6 @@
 
 #include "DrawLines.hpp"
 #include "GL.hpp"
-#include "SDL_events.h"
 #include "SDL_keycode.h"
 #include "SDL_scancode.h"
 #include "gl_errors.hpp"
@@ -12,36 +11,36 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include <random>
-#include <string>
 #include <unordered_set>
 
 GLuint keyboard_meshes_for_color_texture_program = 0;
 
 // Some quick helper functions
 // Use them wisely as they could break if not careful
-float char_to_float(std::vector<char> buffer, int index) {
-	return ((float(buffer[index]) << 24) | 
-		    (float(buffer[index + 1]) << 16) | 
-		    (float(buffer[index + 2]) << 8) | 
-		    (float(buffer[index + 3])));
-}
+//float char_to_float(std::vector<char> buffer, int index) {
+//	return float((uint32_t(buffer[index]) << 24) |
+//		(uint32_t(buffer[index + 1]) << 16) |
+//		(uint32_t(buffer[index + 2]) << 8) |
+//		(uint32_t(buffer[index + 3])));
+//}
 
-uint32_t char_to_uint32(std::vector<char> buffer, int index) {
+uint32_t char_to_uint32(std::vector<char> const &buffer, int index) {
+	std::cout << "\nchar to uint " << buffer[index] << " " << buffer[index + 1] << " " << buffer[index + 2] << " " << buffer[index + 3] << "\n";
 	return ((uint32_t(buffer[index]) << 24) |
-		    (uint32_t(buffer[index + 1]) << 16) |
-		    (uint32_t(buffer[index + 2]) << 8) |
-		    (uint32_t(buffer[index + 3])));
+		(uint32_t(buffer[index + 1]) << 16) |
+		(uint32_t(buffer[index + 2]) << 8) |
+		(uint32_t(buffer[index + 3])));
 }
 
 // END helper functions
 
-PlayMode::PlayMode(Client &client_) : client(client_) {
+PlayMode::PlayMode(Client& client_) : client(client_) {
 }
 
 PlayMode::~PlayMode() {
 }
 
-bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size) {
+bool PlayMode::handle_event(SDL_Event const& evt, glm::uvec2 const& window_size) {
 	// @pablo: i took this out and then ended up not reimplementing anything.
 	// you're probably going to have to write SDL_SCANCODE_ a bunch of times.
 	// https://wiki.libsdl.org/SDL_KeyboardEvent
@@ -53,7 +52,7 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 	if (evt.type == SDL_KEYDOWN) {
 		if (evt.key.repeat) {
 			//Do nothing to ignore repeat
-		} 
+		}
 		else if (evt.key.keysym.sym == SDLK_a) {
 			a.downs += 1;
 			a.pressed = true;
@@ -301,14 +300,14 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 		}
 	}
 	*/
-	
+
 	// Finally that abomination is gone -Pablo
-	SDL_KeyCode key = evt.key.keysym.sym;
+	SDL_KeyCode key = (SDL_KeyCode)evt.key.keysym.sym;
 	if (evt.type == SDL_KEYDOWN) {
 		if (evt.key.repeat) {
 			//Do nothing
 		}
-		else if (buttons.find(key) != buttons.end) {
+		else if (buttons.find(key) != buttons.end()) {
 			buttons[key].downs += 1;
 			buttons[key].total_downs += 1; // for funsies value
 			buttons[key].pressed = true;
@@ -316,7 +315,7 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 		}
 	}
 	else if (evt.type == SDL_KEYUP) {
-		if (buttons.find(key) != buttons.end) {
+		if (buttons.find(key) != buttons.end()) {
 			buttons[key].pressed = false;
 			return true;
 		}
@@ -327,6 +326,8 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 
 void PlayMode::update(float elapsed) {
 	// Find out score and how many keys were mashed
+	num_new_chars_typed = 0;
+	new_score_to_add = 0;
 	for (auto butt_it : buttons) {
 		if (butt_it.second.downs) {
 			int multiplier = 1;
@@ -339,24 +340,29 @@ void PlayMode::update(float elapsed) {
 			butt_it.second.downs = 0; // reset value
 		}
 	}
-	
+
 	//queue data for sending to server:
 	if (num_new_chars_typed || new_score_to_add) {
-		//send a nine-byte message of type 'b':
+		//send a 3-byte message of type 'b':
 		client.connections.back().send('b');
 		client.connections.back().send(num_new_chars_typed);
 		client.connections.back().send(new_score_to_add);
 	}
 
+	num_new_chars_typed = 0;
+	new_score_to_add = 0;
 
 	//send/receive data:
-	client.poll([this](Connection *c, Connection::Event event){
+	client.poll([this, elapsed](Connection* c, Connection::Event event) {
 		if (event == Connection::OnOpen) {
 			std::cout << "[" << c->socket << "] opened" << std::endl;
-		} else if (event == Connection::OnClose) {
+		}
+		else if (event == Connection::OnClose) {
 			std::cout << "[" << c->socket << "] closed (!)" << std::endl;
 			throw std::runtime_error("Lost connection to server!");
-		} else { assert(event == Connection::OnRecv);
+		}
+		else {
+			assert(event == Connection::OnRecv);
 			std::cout << "[" << c->socket << "] recv'd data. Current buffer:\n" << hex_dump(c->recv_buffer); std::cout.flush();
 			//expecting message(s) like 'm' + 28-bytes:
 			while (c->recv_buffer.size() >= 4) {
@@ -378,27 +384,73 @@ void PlayMode::update(float elapsed) {
 				/*uint32_t manager_command = ( // uint32 to leave space for 3 size bits and a uint8 in case plans change
 					(uint32_t(c->recv_buffer[1]) << 24) | (uint32_t(c->recv_buffer[2]) << 16) | (uint32_t(c->recv_buffer[3] << 8)) | (uint32_t(c->recv_buffer[4]))
 				);*/
-				int index = 1; // because I don't trust myself with basic arithmetic
-				uint32_t manager_command = char_to_uint32(c->recv_buffer, index); // uint32 to leave space for 3 size bits and a uint8 in case plans change
-				index += 4;
-				float time_remaining = char_to_float(c->recv_buffer, index);
-				index += 4;
-				float time_total = char_to_float(c->recv_buffer, index);
-				index += 4;
-				uint32_t p1_new_chars = char_to_uint32(c->recv_buffer, index);
-				index += 4;
-				uint32_t p1_score = char_to_uint32(c->recv_buffer, index);
-				index += 4;
-				uint32_t p2_new_chars = char_to_uint32(c->recv_buffer, index);
-				index += 4;
-				uint32_t p2_score = char_to_uint32(c->recv_buffer, index);
-				index += 4;
+				//int index = 1; // because I don't trust myself with basic arithmetic
+				//uint32_t manager_command = c->recv_buffer[1]; // uint32 to leave space for 3 size bits and a uint8 in case plans change
+				//index += 1;
+				//std::cout << "\nchar to actual " << c->recv_buffer[2] << " " << c->recv_buffer[2 + 1] << " " << c->recv_buffer[2 + 2] << " " << c->recv_buffer[2 + 3] << "\n";
+				//int32_t time_remaining = (
+				//	int32_t(uint32_t(c->recv_buffer[3]) << 16) | (uint32_t(c->recv_buffer[4]) << 8) | (uint32_t(c->recv_buffer[5]))
+				//	);
+				//index += 4;
+				//int32_t time_total = char_to_uint32(c->recv_buffer, index);
+				//index += 4;
+				//uint32_t p1_new_chars = char_to_uint32(c->recv_buffer, index);
+				//index += 4;
+				//uint32_t p1_score = char_to_uint32(c->recv_buffer, index);
+				//index += 4;
+				//uint32_t p2_new_chars = char_to_uint32(c->recv_buffer, index);
+				//index += 4;
+				//uint32_t p2_score = char_to_uint32(c->recv_buffer, index);
+				//index += 4;
+				//
+				////TODO remove
+				////assert(index == 29);
 
-				//TODO remove
-				assert(index == 29);
+				uint32_t size = (
+					(uint32_t(c->recv_buffer[1]) << 16) | (uint32_t(c->recv_buffer[2]) << 8) | (uint32_t(c->recv_buffer[3]))
+					);
+				if (c->recv_buffer.size() < 4 + size) break; //if whole message isn't here, can't process
+				//whole message *is* here, so set current server message:
+				server_message = std::string(c->recv_buffer.begin() + 4, c->recv_buffer.begin() + 4 + size);
+				
 
+				// very bad implementation inspired in a panic from
+				// https://github.com/Chipxiang/Bor-Bor-Zan-Online/blob/master/server.cpp
 				//and consume this part of the buffer:
-				c->recv_buffer.erase(c->recv_buffer.begin(), c->recv_buffer.begin() + index);
+				c->recv_buffer.erase(c->recv_buffer.begin(), c->recv_buffer.begin() + 4 + size);
+				std::cout << "\ntrying\n";
+				std::string extract = server_message.substr(0, server_message.find(","));
+				server_message.erase(0, server_message.find(",") + std::string(",").size());
+				uint32_t manager_command = std::stoi(extract);
+				std::cout << "\ntrying\n";
+				extract = server_message.substr(0, server_message.find(","));
+				server_message.erase(0, server_message.find(",") + std::string(",").size());
+				int32_t time_remaining = std::stoi(extract);
+				std::cout << "\ntrying\n";
+				extract = server_message.substr(0, server_message.find(","));
+				server_message.erase(0, server_message.find(",") + std::string(",").size());
+				int32_t time_total = std::stoi(extract);
+				std::cout << "\ntrying\n";
+				extract = server_message.substr(0, server_message.find(","));
+				server_message.erase(0, server_message.find(",") + std::string(",").size());
+				uint32_t p1_new_chars = std::stoi(extract);
+				std::cout << "\ntrying\n";
+				extract = server_message.substr(0, server_message.find(","));
+				server_message.erase(0, server_message.find(",") + std::string(",").size());
+				uint32_t p1_score = std::stoi(extract);
+				std::cout << "\ntrying\n";
+				extract = server_message.substr(0, server_message.find(","));
+				server_message.erase(0, server_message.find(",") + std::string(",").size());
+				uint32_t p2_new_chars = std::stoi(extract);
+
+				std::cout << "\ntrying\n";
+
+				extract = server_message.substr(0, server_message.find(","));
+				server_message.erase(0, server_message.find(",") + std::string(",").size());
+				uint32_t p2_score = std::stoi(extract);
+
+				std::cout << "from server: " << manager_command << " " << time_remaining << " " <<
+						time_total << " " << p1_new_chars << " " << p1_score << " " << p2_new_chars << " " << p2_score << " \n";
 
 				// Update and reset game state for client
 				num_new_chars_typed = 0;
@@ -407,26 +459,26 @@ void PlayMode::update(float elapsed) {
 
 				// Update renderer for client
 				//renderer.set_time_remaining(0.25f);
-				if (time_remaining <= .0f) {
+				if (time_remaining <= 0) {
 					return;
 				}
-				renderer.set_time_remaining(time_remaining / time_total);
+				renderer.set_time_remaining((float)time_remaining / (float)time_total);
 
 				renderer.update_manager_text(commands[manager_command]);
-				renderer.update_p1(size_t(p1_new_chars), p1_score);
-				renderer.update_p2(size_t(p2_new_chars), p2_score);
+				renderer.update_p1(size_t(p1_new_chars), std::to_string(p1_score));
+				renderer.update_p2(size_t(p2_new_chars), std::to_string(p2_score));
 
 				renderer.update(elapsed);
 			}
 		}
-	}, 0.0);
+		}, 0.0);
 
-	
 
-	
+
+
 }
 
-void PlayMode::draw(glm::uvec2 const &drawable_size) {
+void PlayMode::draw(glm::uvec2 const& drawable_size) {
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
 

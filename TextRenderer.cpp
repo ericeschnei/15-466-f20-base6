@@ -42,7 +42,7 @@ void TextRenderer::load_font(size_t size, const std::string &font_path) {
 		if (FT_New_Face(ft_library, font_path.c_str(), 0, &ft_face)) {
 			throw std::runtime_error("FT Face failed to initialize.");
 		}
-		if (FT_Set_Char_Size(ft_face, size, 0, 0, 0)) {
+		if (FT_Set_Char_Size(ft_face, (FT_F26Dot6)size, (FT_F26Dot6)0, 0, 0)) {
 			throw std::runtime_error("FT: Setting char size failed.");
 		}
 
@@ -168,6 +168,7 @@ size_t TextRenderer::get_string(
 		}
 
 		{ // populate the texture
+			std::cout << "\n attempting to populate the texture \n";
 			tex_locations.clear();
 			size_t x = 0;
 			for (hb_codepoint_t cp : codepoints) {
@@ -195,9 +196,9 @@ size_t TextRenderer::get_string(
 
 				glTexSubImage2D(
 					GL_TEXTURE_2D,
-					0,
-					x,
-					0,
+					(GLint)0,
+					(GLint)x,
+					(GLint)0,
 					size.x,
 					size.y,
 					GL_RED,
