@@ -272,7 +272,7 @@ size_t TextRenderer::get_string(
 void TextRenderer::render(
 		const glm::uvec2          &drawable_size,
 		const std::vector<Vertex> &vertices,
-		const glm::uvec2          &position,
+		const glm::vec2           &position,
 		float                      scale,
 		const glm::u8vec4         &color) {
 
@@ -287,19 +287,20 @@ void TextRenderer::render(
 
 	glUseProgram(text_render_program->program);
 
-	float s = scale / font_size;
+	float s = scale / font_size * drawable_size.y;
+
 	glm::mat4 proj =
-		glm::mat4(
-			glm::vec4(   s, 0.0f, 0.0f, 0.0f),
-			glm::vec4(0.0f,    s, 0.0f, 0.0f),
-			glm::vec4(0.0f, 0.0f,    s, 0.0f),
-			glm::vec4(0.0f, 0.0f, 0.0f, 1.0f)
-		) *
 		glm::ortho(
 			0.0f,
 			(float)drawable_size.x,
 			0.0f,
 			(float)drawable_size.y
+		) *
+		glm::mat4(
+			glm::vec4(   s, 0.0f, 0.0f, 0.0f),
+			glm::vec4(0.0f,    s, 0.0f, 0.0f),
+			glm::vec4(0.0f, 0.0f,    s, 0.0f),
+			glm::vec4(position.x * drawable_size.x, position.y * drawable_size.y, 0.0f, 1.0f)
 		);
 
 	glUniformMatrix4fv(
@@ -314,11 +315,6 @@ void TextRenderer::render(
 			color.g / 256.0f,
 			color.b / 256.0f,
 			color.a / 256.0f
-	);
-	glUniform2f(
-			text_render_program->OFFSET_vec2,
-			position.x,
-			position.y
 	);
 
 	glBindVertexArray(vao);

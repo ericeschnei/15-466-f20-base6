@@ -11,12 +11,11 @@ TextRenderProgram::TextRenderProgram() {
 		//vertex shader:
 		"#version 330\n"
 		"uniform mat4 OBJECT_TO_CLIP;\n"
-		"uniform vec2 OFFSET;\n"
 		"in vec4 Position;\n"
 		"in vec2 TexCoord;\n"
 		"out vec2 texCoord;\n"
 		"void main() {\n"
-		"	 gl_Position = OBJECT_TO_CLIP * (vec4(OFFSET, 0.0, 0.0) + Position);\n"
+		"	 gl_Position = OBJECT_TO_CLIP * Position;\n"
 		"	 texCoord = TexCoord;\n"
 		"}\n"
 	,
@@ -37,7 +36,6 @@ TextRenderProgram::TextRenderProgram() {
 	//look up the locations of uniforms:
 	OBJECT_TO_CLIP_mat4 = glGetUniformLocation(program, "OBJECT_TO_CLIP");
 	COLOR_vec4 = glGetUniformLocation(program, "COLOR");
-	OFFSET_vec2 = glGetUniformLocation(program, "OFFSET");
 	GLuint TEX_sampler2D = glGetUniformLocation(program, "TEX");
 
 

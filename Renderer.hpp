@@ -22,7 +22,7 @@ struct Renderer {
 	Scene::Transform *rhand2 = nullptr;
 
 	// text
-	static constexpr size_t FONT_SIZE = 32 << 6;
+	static constexpr size_t FONT_SIZE = 128 << 6;
 
 	// screen textures/fbos
 	const glm::uvec2 tex_size = glm::uvec2(960, 540);

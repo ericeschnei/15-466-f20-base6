@@ -30,7 +30,7 @@ namespace TextRenderer {
 		const std::vector<Vertex> &vertices,
 
 		// properties
-		const glm::uvec2 &position,
+		const glm::vec2  &position,
 		float scale,
 		const glm::u8vec4 &color
 	);

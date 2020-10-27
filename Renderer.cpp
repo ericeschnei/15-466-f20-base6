@@ -168,7 +168,7 @@ void Renderer::draw(const glm::uvec2 &drawable_size) {
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	TextRenderer::render(size, manager_verts, glm::uvec2(100, 100), FONT_SIZE, glm::u8vec4(255, 255, 0, 255));
+	TextRenderer::render(size, manager_verts, glm::vec2(0.5, 0), 3, glm::u8vec4(255, 255, 0, 255));
 
 	glViewport(0, 0, drawable_size.x, drawable_size.y);
 	GL_ERRORS();
