@@ -19,9 +19,10 @@ namespace TextRenderer {
 		const std::string & font_path
 	);
 
-	void get_string(
-		const std::string   & string,
-		std::vector<Vertex> & vertices
+	size_t get_string(
+		const char          *string,
+		std::vector<Vertex> &vertices,
+		float                max_len
 	);
 
 	void render(
