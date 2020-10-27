@@ -18,6 +18,7 @@ struct PlayMode : Mode {
 	virtual void update(float elapsed) override;
 	virtual void draw(glm::uvec2 const &drawable_size) override;
 
+	size_t num_presses = 0;
 	//----- game state -----
 
 	//input tracking:

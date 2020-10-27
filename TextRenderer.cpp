@@ -5,10 +5,11 @@
 #include "glm/ext/matrix_clip_space.hpp"
 #include "glm/gtc/type_ptr.hpp"
 #include "hb-ft.h"
+#include <algorithm>
 #include <cstdio>
 #include <stdexcept>
-#include <unordered_map>
-#include <unordered_set>
+#include <map>
+#include <set>
 
 namespace {
 	GLuint     atlas     = -1U;
@@ -28,7 +29,8 @@ namespace {
 		glm::vec2 bearing;
 	};
 
-	std::unordered_map<hb_codepoint_t, Character> tex_locations;
+	std::map<hb_codepoint_t, Character> tex_locations;
+	std::vector<hb_codepoint_t> tex_codepoints;
 }
 
 void TextRenderer::load_font(size_t size, const std::string &font_path) {
@@ -108,12 +110,16 @@ size_t TextRenderer::get_string(
 	// we found new characters, so we have to redraw the texture.
 	if (redraw_texture) {
 		std::printf("Redrawing string buffer\n");
-		std::unordered_set<hb_codepoint_t> codepoints;
+		std::vector<hb_codepoint_t> codepoints;
 
 		glm::uvec2 tex_size = glm::uvec2(0, 0);
 
 		{ // generate new texture size
-			auto add_new_glyph = [&tex_size](hb_codepoint_t codepoint){
+			auto add_new_glyph = [&tex_size, &codepoints](hb_codepoint_t codepoint){
+
+				if (std::find(codepoints.begin(), codepoints.end(), codepoint) != codepoints.end()) return;
+				codepoints.push_back(codepoint);
+
 				if (FT_Load_Glyph(ft_face, codepoint, FT_LOAD_RENDER)) {
 					throw std::runtime_error("Codepoint failed to load.");
 				}
@@ -122,23 +128,15 @@ size_t TextRenderer::get_string(
 				tex_size.y = std::max(tex_size.y, ft_face->glyph->bitmap.rows);
 			};
 
-			for (auto tex_location : tex_locations) {
-				if (!codepoints.insert(tex_location.first).second) {
-					continue;
-				}
-
-				add_new_glyph(tex_location.first);
-
+			for (auto tex_codepoint : tex_codepoints) {
+				add_new_glyph(tex_codepoint);
 			}
 			for (size_t i = 0; i < buf_len; i++) {
 				hb_codepoint_t cp = info[i].codepoint;
-
-				if (!codepoints.insert(cp).second) {
-					continue;
-				}
-
 				add_new_glyph(cp);
 			}
+
+			tex_codepoints = codepoints;
 		}
 
 		{ // generate texture using tex_size
@@ -171,9 +169,9 @@ size_t TextRenderer::get_string(
 
 		{ // populate the texture
 			tex_locations.clear();
-
 			size_t x = 0;
 			for (hb_codepoint_t cp : codepoints) {
+
 				if (FT_Load_Glyph(ft_face, cp, FT_LOAD_RENDER)) {
 					throw std::runtime_error("Codepoint failed to load.");
 				}
@@ -308,6 +306,7 @@ void TextRenderer::render(
 	if (!center) {
 		len_2d = glm::vec2(0.0f, 0.0f);
 	}
+	len_2d.y = 0.0f;
 	glm::vec2 trans_amt = (position - len_2d) * glm::vec2(drawable_size);
 
 	glm::mat4 trans =

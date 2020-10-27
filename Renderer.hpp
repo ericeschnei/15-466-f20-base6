@@ -2,6 +2,7 @@
 
 #include "Scene.hpp"
 #include "TextRenderer.hpp"
+#include <fstream>
 #include <glm/glm.hpp>
 #include <array>
 
@@ -30,6 +31,17 @@ struct Renderer {
 	std::array<GLuint, 2> texs;
 
 	// text vertices
+	std::string words_p1;
+	std::string words_p2;
+	size_t words_p1_index = 0;
+	size_t words_p2_index = 0;
+	static constexpr size_t MAX_LETTERS_PER_LINE = 24;
+	static constexpr size_t MAX_LINES = 8;
+	std::list<char> current_p1;
+	std::list<char> current_p2;
+	std::vector<TextRenderer::Vertex> current_verts_p1;
+	std::vector<TextRenderer::Vertex> current_verts_p2;
+
 	std::vector<TextRenderer::Vertex> manager_verts;
 	std::list<std::vector<TextRenderer::Vertex>> text_p1;
 	std::list<std::vector<TextRenderer::Vertex>> text_p2;

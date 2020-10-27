@@ -2,6 +2,7 @@
 
 #include "DrawLines.hpp"
 #include "GL.hpp"
+#include "SDL_events.h"
 #include "SDL_keycode.h"
 #include "SDL_scancode.h"
 #include "gl_errors.hpp"
@@ -26,11 +27,24 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 	// @pablo: i took this out and then ended up not reimplementing anything.
 	// you're probably going to have to write SDL_SCANCODE_ a bunch of times.
 	// https://wiki.libsdl.org/SDL_KeyboardEvent
+	if (evt.type == SDL_KEYDOWN) {
+		num_presses++;
+	}
 	return false;
 }
 
 void PlayMode::update(float elapsed) {
 	renderer.set_time_remaining(0.25f);
+	static float timer = 0.0f;
+	timer += elapsed;
+	if (timer > 0.3f) {
+		timer -= 0.3f;
+		renderer.update_p2(5, 5);
+	}
+	if (num_presses > 0) {
+		renderer.update_p1(num_presses, 0);
+		num_presses = 0;
+	}
 	//queue data for sending to server:
 	//TODO: send something that makes sense for your game
 	if (left.downs || right.downs || down.downs || up.downs) {

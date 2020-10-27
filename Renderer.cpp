@@ -8,8 +8,10 @@
 #include "glm/common.hpp"
 #include "LitColorTextureProgram.hpp"
 #include "glm/ext/scalar_constants.hpp"
+#include "glm/fwd.hpp"
 #include "glm/gtc/type_ptr.hpp"
 #include <cstdio>
+#include <iterator>
 #include <stdexcept>
 #include <string>
 
@@ -97,7 +99,18 @@ Renderer::Renderer() : scene(*scene_) {
 
 	{ // initialize renderer
 		TextRenderer::load_font(FONT_SIZE, data_path("mononoki.ttf"));
-		TextRenderer::get_string("Corporate wants letters from the LEFT HALF OF THE KEYBOARD.", manager_verts, -1.0f);
+		TextRenderer::get_string("Waiting...", manager_verts, -1.0f);
+		TextRenderer::get_string("Score: 0", score_p1, -1.0f);
+		TextRenderer::get_string("Score: 0", score_p2, -1.0f);
+	}
+
+	{ // open files
+		std::ifstream p1_txt(data_path("p1.txt"));
+		std::ifstream p2_txt(data_path("p2.txt"));
+
+		words_p1 = std::string((std::istreambuf_iterator<char>(p1_txt)), std::istreambuf_iterator<char>());
+		words_p2 = std::string((std::istreambuf_iterator<char>(p2_txt)), std::istreambuf_iterator<char>());
+
 	}
 
 }
@@ -105,9 +118,70 @@ Renderer::~Renderer() {}
 
 
 void Renderer::update(float time_elapsed) {}
-void Renderer::update_manager_text(std::string new_text) {}
-void Renderer::update_p1(size_t new_chars, int score) {}
-void Renderer::update_p2(size_t new_chars, int score) {}
+
+void Renderer::update_manager_text(std::string new_text) {
+	manager_verts.clear();
+	TextRenderer::get_string(new_text.c_str(), manager_verts, -1.0f);
+}
+
+void Renderer::update_p1(size_t new_chars, int score) {
+
+	for (size_t i = 0; i < new_chars; i++) {
+		if (current_p1.size() >= MAX_LETTERS_PER_LINE) {
+			text_p1.push_front(std::vector<TextRenderer::Vertex>());
+			TextRenderer::get_string(
+				std::string(current_p1.begin(), current_p1.end()).c_str(),
+				text_p1.front(),
+				-1.0f
+			);
+			current_p1.clear();
+			while (text_p1.size() > MAX_LINES) {
+				text_p1.pop_back();
+			}
+		}
+		current_p1.push_back(words_p1[words_p1_index]);
+		words_p1_index++;
+		words_p1_index %= words_p1.size();
+
+		current_verts_p1.clear();
+		TextRenderer::get_string(
+				std::string(current_p1.begin(), current_p1.end()).c_str(),
+				current_verts_p1, -1.0f
+		);
+	}
+
+	score_p1.clear();
+	TextRenderer::get_string(("Score: " + std::to_string(score)).c_str(), score_p1, -1.0f);
+}
+void Renderer::update_p2(size_t new_chars, int score) {
+
+	for (size_t i = 0; i < new_chars; i++) {
+		if (current_p2.size() >= MAX_LETTERS_PER_LINE) {
+			text_p2.push_front(std::vector<TextRenderer::Vertex>());
+			TextRenderer::get_string(
+				std::string(current_p2.begin(), current_p2.end()).c_str(),
+				text_p2.front(),
+				-1.0f
+			);
+			current_p2.clear();
+			while (text_p2.size() > MAX_LINES) {
+				text_p2.pop_back();
+			}
+		}
+		current_p2.push_back(words_p2[words_p2_index]);
+		words_p2_index++;
+		words_p2_index %= words_p2.size();
+
+		current_verts_p2.clear();
+		TextRenderer::get_string(
+				std::string(current_p2.begin(), current_p2.end()).c_str(),
+				current_verts_p2, -1.0f
+		);
+	}
+
+	score_p2.clear();
+	TextRenderer::get_string(("Score: " + std::to_string(score)).c_str(), score_p2, -1.0f);
+}
 
 void Renderer::set_time_remaining(float time_remaining) {
 
@@ -122,16 +196,48 @@ void Renderer::draw(const glm::uvec2 &drawable_size) {
 	// draw screens first
 	glBindFramebuffer(GL_FRAMEBUFFER, fbos[0]);
 	glViewport(0, 0, tex_size.x, tex_size.y);
-	glClearColor(0.0f, 1.0f, 1.0f, 1.0f);
+	glClearColor(0.4f, 0.4f, 0.4f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
 
+	glDisable(GL_DEPTH_TEST);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	static constexpr size_t TEXT_SIZE = 7;
+	static const glm::u8vec4 TEXT_COLOR = glm::u8vec4(255, 255, 255, 255);
+	// Draw manager text
+	size_t i = 1;
+	for (auto line : text_p1) {
+		float y = ((float)i + 0.5f) / (MAX_LINES + 1);
+		TextRenderer::render(tex_size, line, glm::vec2(0.5f, y), TEXT_SIZE, TEXT_COLOR, true);
+		i++;
+	}
+	if (current_verts_p1.size() > 0) {
+		TextRenderer::render(tex_size, current_verts_p1, glm::vec2(0.5f, 0.5f/(MAX_LINES+1)), TEXT_SIZE, TEXT_COLOR, true);
+	}
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 	glBindFramebuffer(GL_FRAMEBUFFER, fbos[1]);
 	glViewport(0, 0, tex_size.x, tex_size.y);
-	glClearColor(1.0f, 0.0f, 1.0f, 1.0f);
+	glClearColor(0.4f, 0.4f, 0.4f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
+
+	glDisable(GL_DEPTH_TEST);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	// Draw manager text
+	i = 1;
+	for (auto line : text_p2) {
+		float y = ((float)i + 0.5f) / (MAX_LINES + 1);
+		TextRenderer::render(tex_size, line, glm::vec2(0.5f, y), TEXT_SIZE, TEXT_COLOR, true);
+		i++;
+	}
+	if (current_verts_p2.size() > 0) {
+		TextRenderer::render(tex_size, current_verts_p2, glm::vec2(0.5f, 0.5f/(MAX_LINES+1)), TEXT_SIZE, TEXT_COLOR, true);
+	}
+
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 	// clamp viewport to 16x9 respolution
@@ -168,8 +274,13 @@ void Renderer::draw(const glm::uvec2 &drawable_size) {
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+	// Draw manager text
 	TextRenderer::render(size, manager_verts, glm::vec2(0.5f, 0.845f), 3, glm::u8vec4(0, 0, 0, 255), true);
 	TextRenderer::render(size, manager_verts, glm::vec2(0.5f, 0.85f), 3, glm::u8vec4(255, 255, 255, 255), true);
+
+	// Draw score text
+	TextRenderer::render(size, score_p1, glm::vec2(0.25f, 0.1f), 4, glm::u8vec4(255, 255, 255, 255), true);
+	TextRenderer::render(size, score_p1, glm::vec2(0.75f, 0.1f), 4, glm::u8vec4(255, 255, 255, 255), true);
 
 	glViewport(0, 0, drawable_size.x, drawable_size.y);
 	GL_ERRORS();
