@@ -3,6 +3,7 @@
 #include "Scene.hpp"
 #include "TextRenderer.hpp"
 #include "glm/fwd.hpp"
+#include <array>
 struct Renderer {
 
 	Renderer();

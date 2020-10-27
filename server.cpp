@@ -9,6 +9,24 @@
 #include <cassert>
 #include <unordered_map>
 
+// Some quick helper functions
+// Use them wisely as they could break if not careful
+float char_to_float(std::vector<char> buffer, int index) {
+	return ((float(buffer[index]) << 24) |
+		(float(buffer[index + 1]) << 16) |
+		(float(buffer[index + 2]) << 8) |
+		(float(buffer[index + 3])));
+}
+
+uint32_t char_to_uint32(std::vector<char> buffer, int index) {
+	return ((uint32_t(buffer[index]) << 24) |
+		(uint32_t(buffer[index + 1]) << 16) |
+		(uint32_t(buffer[index + 2]) << 8) |
+		(uint32_t(buffer[index + 3])));
+}
+
+// END helper functions
+
 int main(int argc, char **argv) {
 #ifdef _WIN32
 	//when compiled on windows, unhandled exceptions don't have their message printed, which can make debugging simple issues difficult.
@@ -31,6 +49,7 @@ int main(int argc, char **argv) {
 	constexpr float ServerTick = 1.0f / 10.0f; //TODO: set a server tick that makes sense for your game
 
 	//server state:
+	
 
 	//per-client state:
 	struct PlayerInfo {
@@ -41,12 +60,10 @@ int main(int argc, char **argv) {
 		}
 		std::string name;
 
-		uint32_t left_presses = 0;
-		uint32_t right_presses = 0;
-		uint32_t up_presses = 0;
-		uint32_t down_presses = 0;
-
-		int32_t total = 0;
+		uint32_t total_characters_pressed = 0; //Can get rid of total in PlayMode now
+		uint32_t num_new_characters = 0;
+		uint32_t current_score = 0;
+		uint32_t manager_command = 0;
 
 	};
 	std::unordered_map< Connection *, PlayerInfo > players;
@@ -98,17 +115,18 @@ int main(int argc, char **argv) {
 							c->close();
 							return;
 						}
-						uint8_t left_count = c->recv_buffer[1];
-						uint8_t right_count = c->recv_buffer[2];
-						uint8_t down_count = c->recv_buffer[3];
-						uint8_t up_count = c->recv_buffer[4];
+						
+						int index = 1;
+						player.num_new_characters = char_to_uint32(c->recv_buffer, index);
+						player.total_characters_pressed += player.num_new_characters;
+						index += 4;
+						player.current_score += char_to_uint32(c->recv_buffer, index);
+						index += 4;
+						
+						//TODO remove
+						assert(index == 9);
 
-						player.left_presses += left_count;
-						player.right_presses += right_count;
-						player.down_presses += down_count;
-						player.up_presses += up_count;
-
-						c->recv_buffer.erase(c->recv_buffer.begin(), c->recv_buffer.begin() + 5);
+						c->recv_buffer.erase(c->recv_buffer.begin(), c->recv_buffer.begin() + index);
 					}
 				}
 			}, remain);
@@ -116,6 +134,8 @@ int main(int argc, char **argv) {
 
 		//update current game state
 		//TODO: replace with *your* game state update
+		
+
 		std::string status_message = "";
 		int32_t overall_sum = 0;
 		for (auto &[c, player] : players) {
