@@ -64,8 +64,8 @@ struct Renderer {
 	// update scores and number of characters.
 	// new_chars is the number of NEW characters.
 	// score is the TOTAL SCORE.
-	void update_p1(size_t new_chars, int score);
-	void update_p2(size_t new_chars, int score);
+	void update_p1(size_t new_chars, const std::string &score);
+	void update_p2(size_t new_chars, const std::string &score);
 
 	// update the manager text. NO PREFIX is assumed--add that yourself
 	void update_manager_text(std::string new_text);

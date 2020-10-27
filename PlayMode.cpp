@@ -12,6 +12,7 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include <random>
+#include <string>
 #include <unordered_set>
 
 GLuint keyboard_meshes_for_color_texture_program = 0;
@@ -36,13 +37,15 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 void PlayMode::update(float elapsed) {
 	renderer.set_time_remaining(0.25f);
 	static float timer = 0.0f;
+	static size_t total_score = 0;
 	timer += elapsed;
 	if (timer > 0.3f) {
 		timer -= 0.3f;
-		renderer.update_p2(5, 5);
+		renderer.update_p2(5, "Their score: 5");
 	}
 	if (num_presses > 0) {
-		renderer.update_p1(num_presses, 0);
+		total_score += num_presses;
+		renderer.update_p1(num_presses, "Your score: " + std::to_string(total_score));
 		num_presses = 0;
 	}
 	renderer.update(elapsed);

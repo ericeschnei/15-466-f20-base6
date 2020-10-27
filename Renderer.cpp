@@ -99,9 +99,9 @@ Renderer::Renderer() : scene(*scene_) {
 
 	{ // initialize renderer
 		TextRenderer::load_font(FONT_SIZE, data_path("mononoki.ttf"));
-		TextRenderer::get_string("Waiting...", manager_verts, -1.0f);
-		TextRenderer::get_string("Your score: 0", score_p1, -1.0f);
-		TextRenderer::get_string("Their score: 0", score_p2, -1.0f);
+		TextRenderer::get_string(" ", manager_verts, -1.0f);
+		TextRenderer::get_string(" ", score_p1, -1.0f);
+		TextRenderer::get_string(" ", score_p2, -1.0f);
 	}
 
 	{ // open files
@@ -140,7 +140,7 @@ void Renderer::update_manager_text(std::string new_text) {
 	TextRenderer::get_string(new_text.c_str(), manager_verts, -1.0f);
 }
 
-void Renderer::update_p1(size_t new_chars, int score) {
+void Renderer::update_p1(size_t new_chars, const std::string &score) {
 	p1_hand_vel += new_chars * INCR_AMT;
 
 	for (size_t i = 0; i < new_chars; i++) {
@@ -168,9 +168,9 @@ void Renderer::update_p1(size_t new_chars, int score) {
 	}
 
 	score_p1.clear();
-	TextRenderer::get_string(("Your score: " + std::to_string(score)).c_str(), score_p1, -1.0f);
+	TextRenderer::get_string(score.c_str(), score_p1, -1.0f);
 }
-void Renderer::update_p2(size_t new_chars, int score) {
+void Renderer::update_p2(size_t new_chars, const std::string &score) {
 	p2_hand_vel += new_chars * INCR_AMT;
 
 	for (size_t i = 0; i < new_chars; i++) {
@@ -198,7 +198,7 @@ void Renderer::update_p2(size_t new_chars, int score) {
 	}
 
 	score_p2.clear();
-	TextRenderer::get_string(("Their score: " + std::to_string(score)).c_str(), score_p2, -1.0f);
+	TextRenderer::get_string(score.c_str(), score_p2, -1.0f);
 }
 
 void Renderer::set_time_remaining(float time_remaining) {
